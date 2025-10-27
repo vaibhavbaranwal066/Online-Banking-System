@@ -1,0 +1,14 @@
+package com.example.onlinebanking;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class OnlineBankingApplicationTests {
+
+    @Test
+    void contextLoads() {
+        // smoke test: assert that Spring application context starts
+    }
+
+}
