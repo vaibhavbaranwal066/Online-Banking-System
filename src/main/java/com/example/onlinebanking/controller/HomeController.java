@@ -8,6 +8,10 @@ public class HomeController {
 
     @GetMapping("/")
     public String root() {
-        return "redirect:/login";
+        // Show landing page instead of immediately redirecting to login.
+        // This avoids a redirect loop in some browsers when cookies/sessions
+        // have inconsistent auth state. The `index.jsp` contains a link
+        // to the login page.
+        return "index";
     }
 }

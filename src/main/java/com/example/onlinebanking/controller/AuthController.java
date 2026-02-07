@@ -19,8 +19,10 @@ public class AuthController {
 
     // ✅ Login page mapping
     @GetMapping("/login")
-    public String loginPage() { 
-        return "login"; 
+    public String loginPage() {
+        // Simply return the login view. Spring Security handles redirects
+        // for already-authenticated users via the success handler.
+        return "login";
     }
 
     // ✅ Admin registration form

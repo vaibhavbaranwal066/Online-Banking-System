@@ -30,7 +30,8 @@ public class CustomerController {
         Customer c = customerRepo.findByUsername(p.getName()).orElseThrow();
         m.addAttribute("accounts", c.getAccounts());
         m.addAttribute("customer", c);
-        return "home"; // FIXED: matches home.jsp
+        // view is located at /WEB-INF/jsp/customer/home.jsp
+        return "customer/home";
     }
 
     @PostMapping("/account/withdraw")

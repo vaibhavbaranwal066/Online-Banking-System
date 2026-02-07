@@ -61,6 +61,11 @@ public class SecurityConfig {
         return (HttpServletRequest request, HttpServletResponse response,
                 org.springframework.security.core.Authentication authentication) -> {
 
+            if (authentication == null || !authentication.isAuthenticated()) {
+                // Not actually authenticated; let Spring handle the error
+                return;
+            }
+
             boolean isAdmin = authentication.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
             boolean isCustomer = authentication.getAuthorities().stream()
@@ -71,8 +76,10 @@ public class SecurityConfig {
             } else if (isCustomer) {
                 response.sendRedirect(request.getContextPath() + "/customer/home");
             } else {
-                // fallback to login with error
-                response.sendRedirect(request.getContextPath() + "/login?error=true");
+                // No valid role: just return without redirecting.
+                // Let the app render the default error page instead of redirect loop.
+                System.err.println("WARNING: User authenticated but no recognized role. Authorities: " + authentication.getAuthorities());
+                return;
             }
         };
     }
