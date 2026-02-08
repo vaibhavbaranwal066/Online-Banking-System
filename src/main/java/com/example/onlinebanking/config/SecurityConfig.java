@@ -14,9 +14,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import java.util.Optional;
 
 @Configuration
@@ -58,30 +55,7 @@ public class SecurityConfig {
     // Redirect users after login based on role
     @Bean
     public AuthenticationSuccessHandler customAuthSuccessHandler() {
-        return (HttpServletRequest request, HttpServletResponse response,
-                org.springframework.security.core.Authentication authentication) -> {
-
-            if (authentication == null || !authentication.isAuthenticated()) {
-                // Not actually authenticated; let Spring handle the error
-                return;
-            }
-
-            boolean isAdmin = authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-            boolean isCustomer = authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_CUSTOMER"));
-
-            if (isAdmin) {
-                response.sendRedirect(request.getContextPath() + "/admin/dashboard");
-            } else if (isCustomer) {
-                response.sendRedirect(request.getContextPath() + "/customer/home");
-            } else {
-                // No valid role: just return without redirecting.
-                // Let the app render the default error page instead of redirect loop.
-                System.err.println("WARNING: User authenticated but no recognized role. Authorities: " + authentication.getAuthorities());
-                return;
-            }
-        };
+        return new CustomAuthSuccessHandler();
     }
 
     // Main security configuration
@@ -104,19 +78,21 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
-                .loginPage("/login")                   // GET /login
-                .loginProcessingUrl("/perform_login")  // POST /perform_login
-                .successHandler(customAuthSuccessHandler()) // only this handler
-                .failureUrl("/login?error=true")
-                .permitAll()
+                .loginPage("/login")                        // GET /login - form login page
+                .loginProcessingUrl("/perform_login")       // POST /perform_login - form action
+                .successHandler(customAuthSuccessHandler()) // Handle successful login with role-based redirect
+                .failureUrl("/login?error=true")            // Failed login redirect
+                .permitAll()                                // Allow login page for all users
             )
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout=true")
                 .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
+                .deleteCookies("JSESSIONID", "XSRF-TOKEN")
                 .permitAll()
-            );
+            )
+            // Prevent redirect loop for authenticated users accessing login page
+            .requestCache(cache -> cache.requestCache(null));
 
         return http.build();
     }
